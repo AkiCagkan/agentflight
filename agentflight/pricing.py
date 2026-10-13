@@ -1,8 +1,9 @@
 """Model prices (USD per 1 million tokens): (input, output).
 
-Claude prices are Anthropic's published first-party API prices (October 2026). Prices of other
-providers may change; those values are estimates. Project-specific prices can override them in the
-[prices] table of `agentflight.toml`:
+Claude prices are Anthropic's published first-party API prices (checked on 13 October 2026 against
+https://platform.claude.com/docs/en/about-claude/pricing), including the higher price of long prompts where a
+model has one. Prices of other providers may change; those values are estimates. Project-specific prices can
+override them in the [prices] table of `agentflight.toml`:
 
     [prices]
     "gemini-flash-latest" = [0.30, 2.50]
@@ -39,6 +40,11 @@ PRICES: dict[str, tuple[float, float]] = {
 
 EXACT_PROVIDERS = ("claude-",)
 
+# Models whose price goes up when the prompt is longer than a threshold: model -> (input tokens, price).
+LONG_PROMPT_PRICES: dict[str, tuple[int, tuple[float, float]]] = {
+    "claude-haiku-5-5": (100_000, (0.50, 2.50)),
+}
+
 _EXTRA: dict[str, tuple[float, float]] = {}
 
 
@@ -66,6 +72,10 @@ def cost(model: str, input_tokens: int, output_tokens: int) -> float:
     price = find_price(model)
     if price is None:
         return 0.0
+    if model not in _EXTRA:
+        for name, (threshold, long_price) in LONG_PROMPT_PRICES.items():
+            if model.startswith(name) and input_tokens > threshold:
+                price = long_price
     return (input_tokens * price[0] + output_tokens * price[1]) / 1_000_000
 
 

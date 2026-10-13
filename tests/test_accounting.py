@@ -166,5 +166,14 @@ class CallLevelTotals(unittest.TestCase):
         self.assertAlmostEqual(self.events.of_type("call_finished")[0]["cost"], price_in + price_out, places=9)
 
 
+class PriceTable(unittest.TestCase):
+    def test_long_prompts_use_the_higher_price(self):
+        from agentflight.pricing import cost
+        self.assertAlmostEqual(cost("claude-haiku-5-5", 100_000, 1_000), 0.01 + 0.0005, places=9)
+        self.assertAlmostEqual(cost("claude-haiku-5-5", 100_001, 1_000), 100_001 * 0.5e-6 + 0.0025, places=9)
+        self.assertAlmostEqual(cost("claude-opus-5-5", 1_000_000, 1_000_000), 24.0, places=9)
+        self.assertEqual(cost("unknown-model", 1_000, 1_000), 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
