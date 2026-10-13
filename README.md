@@ -307,7 +307,7 @@ total = 1.0            # USD per run (API-key routes)
 
 ```bash
 pip install -e ".[dev]"
-python -m unittest discover -s tests -t .     # 118 tests; offline, no keys or accounts needed
+python -m unittest discover -s tests -t .     # 122 tests; offline, no keys or accounts needed
 python tests/panel_browser_test.py            # the panel end to end in a real browser (Playwright)
 python -m unittest tests.vscode_unit_test     # the VS Code extension against a real panel
 ruff check .

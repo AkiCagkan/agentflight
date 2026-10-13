@@ -249,6 +249,9 @@ def _agent_call(agent: Agent, fn, signature, args, kwargs):
         "system": system, "signature": signature_text,
     }
     t0 = time.monotonic()
+    # Tokens and cost of this call, kept up to date turn by turn so that a call that fails or is stopped still
+    # reports what it spent (the run totals always include it).
+    usage = {"turns": 0, "input_tokens": 0, "output_tokens": 0, "cost": 0.0}
     token = current_call.set(call_id)
     try:
         previous = run.replay.take(key) if run.replay is not None else None
@@ -270,7 +273,7 @@ def _agent_call(agent: Agent, fn, signature, args, kwargs):
             try:
                 loop = _session_loop if getattr(provider, "session_based", False) else _loop
                 result, details = loop(run, agent, agent_name, method, call_id, provider, model, system, user,
-                                       tools, returns, schema, strict)
+                                       tools, returns, schema, strict, usage)
                 break
             except ProviderError as e:
                 # With `auto`, a provider that fails with an access error is skipped and the next one is tried.
@@ -298,14 +301,14 @@ def _agent_call(agent: Agent, fn, signature, args, kwargs):
         return result
     except AgentStopped:
         duration = int((time.monotonic() - t0) * 1000)
-        record.update(status="stopped", duration_ms=duration)
-        run.bus.publish("call_finished", id=call_id, status="stopped", duration_ms=duration)
+        record.update(status="stopped", duration_ms=duration, **usage)
+        run.bus.publish("call_finished", id=call_id, status="stopped", duration_ms=duration, **usage)
         return None
     except Exception as e:
         duration = int((time.monotonic() - t0) * 1000)
-        record.update(status="error", error=f"{type(e).__name__}: {e}", duration_ms=duration)
+        record.update(status="error", error=f"{type(e).__name__}: {e}", duration_ms=duration, **usage)
         run.bus.publish("call_finished", id=call_id, status="error", error=f"{type(e).__name__}: {e}",
-                        duration_ms=duration)
+                        duration_ms=duration, **usage)
         raise
     finally:
         current_call.reset(token)
@@ -342,13 +345,12 @@ def _run_tool(run, call_id, tool_map, name, arguments) -> tuple[str, bool]:
     return content, error
 
 
-def _loop(run, agent, agent_name, method, call_id, provider, model, system, user, tools, returns, schema, strict):
+def _loop(run, agent, agent_name, method, call_id, provider, model, system, user, tools, returns, schema, strict,
+          usage):
     messages: list[dict] = [dict(m) for m in agent._history] if agent.memory else []
     messages.append({"role": "user", "content": user})
     tool_map = {t.name: t for t in tools}
     tool_definitions = [t.definition() for t in tools]
-    input_tokens = output_tokens = 0
-    total = 0.0
     format_attempts = 0
 
     def on_text(chunk: str):
@@ -361,6 +363,7 @@ def _loop(run, agent, agent_name, method, call_id, provider, model, system, user
             messages.append({"role": "user", "content": interjection(m)})
         run.check_budget(agent_name, agent.budget)
         run.bus.publish("turn_started", id=call_id, turn=turn)
+        usage["turns"] += 1
         request = Request(
             model=model, system=system, messages=messages, tools=tool_definitions, schema=schema,
             strict_schema=strict, temperature=agent.temperature, seed=agent.seed, effort=agent.effort,
@@ -369,9 +372,9 @@ def _loop(run, agent, agent_name, method, call_id, provider, model, system, user
         response = provider.call(request, on_text)
         subscription = getattr(provider, "subscription", False)
         cost = run.spend(agent_name, model, response.input_tokens, response.output_tokens, subscription=subscription)
-        input_tokens += response.input_tokens
-        output_tokens += response.output_tokens
-        total += cost
+        usage["input_tokens"] += response.input_tokens
+        usage["output_tokens"] += response.output_tokens
+        usage["cost"] += cost
         run.bus.publish("turn_finished", id=call_id, turn=turn, input_tokens=response.input_tokens,
                         output_tokens=response.output_tokens, cost=cost, stop_reason=response.stop_reason,
                         total_cost=run.total_cost, subscription=subscription)
@@ -406,8 +409,7 @@ def _loop(run, agent, agent_name, method, call_id, provider, model, system, user
                                                               e.errors)) from None
             messages.append({"role": "user", "content": format_error_message(e.errors)})
             continue
-        return result, {"messages": messages, "turns": turn, "input_tokens": input_tokens,
-                        "output_tokens": output_tokens, "cost": total, "raw_text": response.text}
+        return result, {"messages": messages, **usage, "raw_text": response.text}
 
     raise MaxTurnsExceeded(f"{agent_name}.{method} did not reach a result in {agent.max_turns} turns")
 
@@ -423,7 +425,7 @@ def _history_text(history: list[dict]) -> str:
 
 
 def _session_loop(run, agent, agent_name, method, call_id, provider, model, system, user, tools, returns,
-                  schema, strict):
+                  schema, strict, usage):
     """The path where the provider runs the tool loop itself (Claude Code). Tools are offered through a local
     MCP bridge; every tool call still goes through `_run_tool` (live view, approval, stopping)."""
     import contextvars
@@ -435,7 +437,7 @@ def _session_loop(run, agent, agent_name, method, call_id, provider, model, syst
     tool_map = {t.name: t for t in tools}
     base_context = contextvars.copy_context()
     subscription = getattr(provider, "subscription", False)
-    counters = {"turns": 0, "input_tokens": 0, "output_tokens": 0, "cost": 0.0}
+    counters = usage
 
     def run_tool(name, arguments):
         # The MCP request arrives on another thread; run it in the context of the agent call.
