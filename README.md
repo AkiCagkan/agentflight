@@ -4,14 +4,101 @@
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Write LLM agents in plain Python. Watch every call live, step in, replay any step, and test them with evals.**
+**Debug LLM agents like code, right inside VS Code.**
 
-Like a flight recorder for your agents: every run is recorded, every step can be inspected and replayed, and you
-can take the controls while it flies.
+AgentFlight is a VS Code extension plus a small Python library. You write agents in plain Python; the extension
+shows every agent call live next to your terminal, lets you step in while it runs, replays any step from a
+record, and runs your evals. Like a flight recorder for your agents, with the controls in your hands.
 
 ![The AgentFlight panel while three researcher agents run in parallel, call a Wikipedia tool and wait for an approval](docs/images/demo.gif)
 
-<sub>Recorded with `scripts/record_demo.py` while `examples/02_research.py` ran on a local 4B model (LM Studio).</sub>
+<sub>The AgentFlight panel while `examples/02_research.py` runs on a local 4B model (LM Studio); recorded with
+`scripts/record_demo.py`.</sub>
+
+## What you get in VS Code
+
+- **The AgentFlight panel next to your terminal**: every agent call of every running program, live: tool calls,
+  the streamed answer, format errors and their fixes, tokens and cost.
+- **▶ Run with AgentFlight** above every agent class and **✓ Run eval** above every eval (CodeLens).
+- **Running lines highlighted** in the editor; a line waiting for a human approval is marked and a notification
+  pops up.
+- **Step in**: pause or kill an agent, send it a message, approve, edit or reject a value
+  (`require_approval`) before the program continues.
+- **Replay from any step**: every run is recorded; fix a prompt and re-run from step 4 while steps 1-3 come from
+  the record, without calling the model again.
+- **Evals next to the code**, measured statistically ("9 out of 10 tries must pass"), with an optional model judge.
+- **Model-name completion** inside `model = "` and `agentflight check` on save (Problems view); links in the panel
+  open the file at the line.
+- **Your own subscription** (ChatGPT plan, Claude Pro/Max through Claude Code), API keys (Anthropic, OpenAI,
+  Gemini) or local models (Ollama, LM Studio); different agents can use different providers in one program.
+
+The extension also works in **Cursor** and VSCodium. The same panel opens in a browser (`agentflight watch`), and
+there is an experimental JetBrains plugin.
+
+> **Status: alpha (0.4.0).** Not on PyPI or the VS Code Marketplace yet; install from the
+> [releases](https://github.com/AkiCagkan/agentflight/releases) or from source. The library has no runtime
+> dependencies besides the Python standard library.
+
+## Quick start
+
+1. Install the library (Python 3.11+):
+
+   ```bash
+   git clone https://github.com/AkiCagkan/agentflight.git && cd agentflight
+   pip install -e .
+   ```
+
+2. Install the extension: download `agentflight-vscode-0.4.0.vsix` from the
+   [latest release](https://github.com/AkiCagkan/agentflight/releases/latest) (or build it with
+   `python scripts/build_vsix.py`), then:
+
+   ```bash
+   code --install-extension agentflight-vscode-0.4.0.vsix      # Cursor: cursor --install-extension ...
+   ```
+
+3. Open the `examples/` folder in VS Code, open `02_research.py` and click **▶ Run with AgentFlight**. The panel
+   opens next to the terminal and the three researchers start working.
+
+Without an account or API key, `model = "auto"` falls back to an offline `fake` model that builds schema-shaped
+answers from the input text, which is enough to try the panel, approvals, recording and replay. To use real
+models, connect one of:
+
+```bash
+agentflight login chatgpt        # "Sign in with ChatGPT" in the browser; billed to your ChatGPT plan
+agentflight login claude         # Claude Code's own login; Claude agents then run on your Claude subscription
+# or set ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY, or start Ollama / LM Studio
+agentflight models               # what is available and which route each model takes
+```
+
+Not using VS Code? Run `agentflight watch` to open the same panel in a browser, then start your program from any
+terminal (`python main.py`); it shows up in the panel.
+
+## The panel
+
+`agentflight watch` starts a local server and opens the panel. Every AgentFlight program started while it runs
+(`python main.py`, `agentflight run main.py`, from any terminal or editor) finds it through `~/.agentflight/panel.json`,
+connects, streams its events and is recorded. Without a panel a program prints a compact live log to the
+terminal instead (`AGENTFLIGHT_PANEL=0` turns the connection off).
+
+| | |
+|---|---|
+| **Agents · Live** | The call tree of the selected run: parallel groups, nested agents (an agent called from another agent's tool), tool calls, the streamed answer, format errors and fixes, model fallbacks, cost or "subscription" |
+| **Step in** | Pause / resume / kill one agent (its sub-agents follow) or the whole program; send a message to a running agent |
+| **Approvals** | `require_approval(value, "question")` waits here: Approve, Edit (re-validated against the type) or Reject |
+| **Steps** | Each agent call is a step: the exact system prompt and messages sent, the answer received, "Replay from this step", links to the source line and the instructions file |
+| **Output · Eval · History** | The program's stdout/stderr, eval results, earlier runs of every project that connected |
+| **Settings** | Connect ChatGPT / Claude, API keys (DPAPI-encrypted on Windows), account-vs-key priority |
+
+![Replay from step 4: steps 1-3 come from the record](docs/images/replay.png)
+
+### Other editors
+
+| Editor | Install | What you get |
+|---|---|---|
+| **Browser** | `agentflight watch` | The same panel at http://127.0.0.1:7790 |
+| **PyCharm, IntelliJ IDEA** and other JetBrains IDEs (2024.1+), experimental | `agentflight-jetbrains-0.4.0.zip` from the releases (or `python scripts/build_jetbrains.py`) → Settings › Plugins › ⚙ › *Install Plugin from Disk…* | An *AgentFlight* tool window with the panel; *Run with AgentFlight* / *Run AgentFlight Evals* actions; links open files |
+
+## Writing agents
 
 An AgentFlight program is ordinary Python. Your code decides the flow; the model fills typed gaps:
 
@@ -46,72 +133,12 @@ if __name__ == "__main__":
     print(summary.title, summary.bullets)
 ```
 
-`summarize` returns a real `Summary` or raises `SchemaError`; when the model's answer does not match the
-type, the validation errors are sent back and the model is asked to fix it. On top of that you get:
-
-- **a live panel** (in the browser, VS Code, Cursor or PyCharm) showing every agent call of every running
-  program: tool calls, the streamed answer, format errors and their fixes, tokens and cost;
-- **stepping in**: pause an agent, send it a message, kill it, approve or edit a value before the program
-  continues (`require_approval`);
-- **replay from any step**: every run is recorded; fix a prompt and re-run from step 4 while steps 1-3 come from
-  the record, without calling the model again;
-- **evals next to the code**, measured statistically ("9 out of 10 tries must pass"), with an optional model judge;
-- **your own subscription** (ChatGPT plan, Claude Pro/Max through Claude Code) or API keys (Anthropic, OpenAI,
-  Gemini), or local models (Ollama, LM Studio); different agents can use different providers in one program.
-
-> **Status: alpha (0.4.0).** Not on PyPI yet. No runtime dependencies besides the Python standard library.
-
-## Quick start
-
-```bash
-git clone https://github.com/AkiCagkan/agentflight.git && cd agentflight
-pip install -e .                              # Python 3.11+
-cd examples
-agentflight watch &                           # the panel: http://127.0.0.1:7790
-AGENTFLIGHT_MODEL=fake python 02_research.py  # offline fake model; any terminal, the run shows up in the panel
-```
-
-Without an account or key, `model = "auto"` falls back to an offline `fake` model that builds schema-shaped
-answers from the input text, which is enough to try the panel, approvals, recording and replay. To use real
-models, connect one of:
-
-```bash
-agentflight login chatgpt        # "Sign in with ChatGPT" in the browser; billed to your ChatGPT plan
-agentflight login claude         # Claude Code's own login; Claude agents then run on your Claude subscription
-# or set ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY, or start Ollama / LM Studio
-agentflight models               # what is available and which route each model takes
-```
-
-## The panel
-
-`agentflight watch` starts a local server and opens the panel. Every AgentFlight program started while it runs
-(`python main.py`, `agentflight run main.py`, from any terminal or editor) finds it through `~/.agentflight/panel.json`,
-connects, streams its events and is recorded. Without a panel a program prints a compact live log to the
-terminal instead (`AGENTFLIGHT_PANEL=0` turns the connection off).
-
-| | |
-|---|---|
-| **Agents · Live** | The call tree of the selected run: parallel groups, nested agents (an agent called from another agent's tool), tool calls, the streamed answer, format errors and fixes, model fallbacks, cost or "subscription" |
-| **Step in** | Pause / resume / kill one agent (its sub-agents follow) or the whole program; send a message to a running agent |
-| **Approvals** | `require_approval(value, "question")` waits here: Approve, Edit (re-validated against the type) or Reject |
-| **Steps** | Each agent call is a step: the exact system prompt and messages sent, the answer received, "Replay from this step", links to the source line and the instructions file |
-| **Output · Eval · History** | The program's stdout/stderr, eval results, earlier runs of every project that connected |
-| **Settings** | Connect ChatGPT / Claude, API keys (DPAPI-encrypted on Windows), account-vs-key priority |
-
-![Replay from step 4: steps 1-3 come from the record](docs/images/replay.png)
-
-### Editor extensions
-
-| Editor | Build and install | What you get |
-|---|---|---|
-| **VS Code, Cursor, VSCodium** | `python scripts/build_vsix.py` → `code --install-extension dist/agentflight-vscode-0.4.0.vsix` | The panel next to the terminal; ▶ Run / ✓ Run eval CodeLens above agents and evals; the lines whose calls are running are highlighted; approval notifications; model-name completion inside `model = "`; `agentflight check` on save (Problems view); links in the panel open the file at the line |
-| **PyCharm, IntelliJ IDEA** and other JetBrains IDEs (2024.1+) | `python scripts/build_jetbrains.py` → Settings › Plugins › ⚙ › *Install Plugin from Disk…* | An *AgentFlight* tool window with the panel; *Run with AgentFlight* / *Run AgentFlight Evals* actions; links open files |
-
-## Writing agents
+`summarize` returns a real `Summary` or raises `SchemaError`; when the model's answer does not match the type,
+the validation errors are sent back and the model is asked to fix it. A fuller agent:
 
 ```python
 from agentflight import (Agent, Eval, Schema, field, llm, mcp_server, parallel, parallel_map,
-                  require_approval, tool)
+                         require_approval, tool)
 
 
 @tool
