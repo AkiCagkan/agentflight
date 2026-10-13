@@ -1,0 +1,46 @@
+{
+  "AgentFlight agent": {
+    "prefix": "agent",
+    "body": [
+      "class ${1:Name}(Agent):",
+      "    \"\"\"${2:prompts/name.md}\"\"\"",
+      "",
+      "    @llm",
+      "    def ${3:method}(self, ${4:text}: str) -> ${5:str}: ..."
+    ],
+    "description": "AgentFlight: new agent (Agent class + @llm method)"
+  },
+  "AgentFlight schema": {
+    "prefix": "schema",
+    "body": ["class ${1:Name}(Schema):", "    ${2:field_name}: ${3:str} = field(\"${4:description}\")"],
+    "description": "AgentFlight: new schema"
+  },
+  "AgentFlight eval": {
+    "prefix": "eval",
+    "body": [
+      "class ${1:Name}(Eval, target=${2:Agent.method}):",
+      "    inputs = [${3}]",
+      "    threshold = 0.8",
+      "",
+      "    @staticmethod",
+      "    def check(input, result):",
+      "        assert ${4:result}"
+    ],
+    "description": "AgentFlight: new eval"
+  },
+  "AgentFlight tool": {
+    "prefix": "tool",
+    "body": ["@tool", "def ${1:name}(${2:text}: str) -> str:", "    \"\"\"${3:What the tool does.}\"\"\"", "    ${4:return text}"],
+    "description": "AgentFlight: new tool"
+  },
+  "AgentFlight parallel": {
+    "prefix": "parallel",
+    "body": ["${1:a}, ${2:b} = parallel(", "    lambda: ${3:Agent().method(...)},", "    lambda: ${4:Agent().method(...)},", ")"],
+    "description": "AgentFlight: run agent calls at the same time"
+  },
+  "AgentFlight imports": {
+    "prefix": "from agentflight",
+    "body": ["from agentflight import Agent, Eval, Schema, field, llm, parallel, require_approval, tool"],
+    "description": "AgentFlight: imports"
+  }
+}

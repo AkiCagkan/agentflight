@@ -1,0 +1,5 @@
+Biogas is a mixture of gases produced when bacteria break down organic waste in the absence of oxygen. The process is called anaerobic digestion and usually takes place in closed tanks called digesters. Animal manure, food waste, crop residues and sewage sludge are the most common feedstocks.
+
+Most of the gas is methane and carbon dioxide. Depending on the feedstock and the operating conditions, the methane share is usually between 50 and 70 percent. The gas also contains small amounts of hydrogen sulfide and moisture, which damage engines and boilers, so it is cleaned before use.
+
+Biogas can be burned in a boiler for heat, used in a gas engine to produce electricity and heat together, or upgraded to biomethane and injected into the natural gas grid. The digestate left after digestion is a nutrient-rich fertilizer. Because the carbon in biogas was recently captured by plants, it is considered a renewable energy source.

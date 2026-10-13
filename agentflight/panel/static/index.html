@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="agentflight-token" content="{{TOKEN}}">
+<meta name="agentflight-version" content="{{VERSION}}">
+<title>AgentFlight Panel</title>
+<link rel="icon" href="/static/icon.png">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><img src="/static/icon.png" alt="" class="logo-icon"> <span>AgentFlight</span></div>
+  <div class="topbar-center">
+    <button class="btn" id="pauseAllBtn" title="Pause / resume all running agents" disabled>⏸ Pause</button>
+    <button class="btn danger" id="stopBtn" title="Stop the program (Shift+F5)" disabled>■ Stop</button>
+  </div>
+  <div class="counters">
+    <span class="status-pill idle" id="statusPill">ready</span>
+    <span class="counter" id="counterTime">0.0 s</span>
+    <span class="counter" id="counterTokens">0 tokens</span>
+    <span class="counter" id="counterCost">$0.0000</span>
+    <button class="icon-btn settings-btn" id="settingsBtn" title="Settings (Ctrl+,)">⚙</button>
+  </div>
+</header>
+
+<main class="layout" id="layout">
+  <section class="details" id="details">
+    <nav class="tabs" id="detailTabs">
+      <button data-tab="steps" class="selected">Steps</button>
+      <button data-tab="output">Output <span class="badge hidden" id="outputBadge"></span></button>
+      <button data-tab="eval">Eval</button>
+      <button data-tab="history">History</button>
+    </nav>
+    <div class="tab-content">
+      <div class="tab-page" data-page="steps" id="stepsPage"></div>
+      <div class="tab-page hidden" data-page="output"><pre class="console" id="console"></pre></div>
+      <div class="tab-page hidden" data-page="eval" id="evalPage"></div>
+      <div class="tab-page hidden" data-page="history" id="historyPage"></div>
+    </div>
+  </section>
+
+  <div class="resize-handle" id="agentsHandle"></div>
+  <aside class="agents" id="agents">
+    <div class="agents-head">
+      <span class="live-title"><span class="pulse" id="pulse"></span>AGENTS · LIVE</span>
+      <select id="runSelect" class="run-select" title="Run shown"></select>
+    </div>
+    <div class="agent-tree" id="agentTree">
+      <div class="empty-state">No agents have run yet.<br><span>Run <code>python main.py</code> or <code>agentflight run main.py</code> in a terminal; agents show up here live.</span></div>
+    </div>
+    <div class="composer" id="composer">
+      <div class="composer-target" id="composerTarget">Select an agent</div>
+      <div class="composer-buttons">
+        <button class="btn small" id="agentPauseBtn" disabled>⏸ Pause</button>
+        <button class="btn small danger" id="agentKillBtn" disabled>✕ Kill</button>
+      </div>
+      <div class="composer-row">
+        <input id="messageInput" placeholder="Message the agent… (Enter)" disabled spellcheck="false">
+        <button class="btn small primary" id="sendBtn" disabled>Send</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer class="statusbar" id="statusbar">
+  <span class="sb-spacer"></span>
+  <span class="sb-item" id="sbRun"></span>
+  <span class="sb-item" id="sbVersion"></span>
+</footer>
+
+<!-- settings -->
+<div class="overlay hidden" id="settingsOverlay">
+  <div class="dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="dialog-head"><h2 id="settingsTitle">Settings</h2><span class="spacer"></span><button class="icon-btn" id="settingsClose" title="Close">×</button></div>
+    <div class="settings-body">
+      <nav class="settings-tabs" id="settingsTabs">
+        <button data-settings="accounts" class="selected">Accounts</button>
+        <button data-settings="keys">API keys</button>
+        <button data-settings="general">General</button>
+        <button data-settings="shortcuts">Shortcuts</button>
+        <button data-settings="about">About</button>
+      </nav>
+      <div class="settings-content" id="settingsContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- approval (require_approval) -->
+<div class="overlay hidden" id="approvalOverlay">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="approvalTitle">
+    <div class="dialog-head"><span class="warn-icon">⏸</span><h2 id="approvalTitle">Approval needed</h2></div>
+    <div class="dialog-sub" id="approvalLocation"></div>
+    <div class="dialog-label">Value</div>
+    <textarea id="approvalValue" class="approval-value" spellcheck="false" readonly></textarea>
+    <div class="dialog-buttons">
+      <button class="btn primary" id="approveBtn">✓ Approve</button>
+      <button class="btn" id="editBtn">✎ Edit</button>
+      <button class="btn danger" id="rejectBtn">✕ Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- confirmation -->
+<div class="overlay hidden" id="confirmOverlay">
+  <div class="dialog dialog-small" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="dialog-head"><h2 id="confirmTitle"></h2></div>
+    <div class="dialog-sub" id="confirmText"></div>
+    <div class="dialog-buttons align-right">
+      <button class="btn" id="confirmCancel">Cancel</button>
+      <button class="btn primary" id="confirmOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

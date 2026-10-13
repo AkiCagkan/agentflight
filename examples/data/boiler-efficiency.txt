@@ -1,0 +1,5 @@
+Boiler efficiency is the share of the fuel's energy that ends up in the steam or hot water. Modern industrial boilers reach 85 to 95 percent, depending on the fuel, the load and how well they are maintained.
+
+The largest loss is usually the heat that leaves with the flue gas. Every 20 degrees of extra flue gas temperature costs roughly one percent of efficiency. Economizers recover part of this heat by preheating the feedwater, and condensing boilers go further by also recovering the latent heat of the water vapor in the flue gas.
+
+Excess air is the second lever. Too little air leaves unburned fuel and carbon monoxide; too much air carries heat up the stack. An oxygen trim system measures the oxygen in the flue gas and adjusts the air damper continuously. Scale on the water side and soot on the fire side act as insulation, so water treatment and regular cleaning keep efficiency from slowly drifting down.

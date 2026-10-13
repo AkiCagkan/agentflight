@@ -1,0 +1,10 @@
+[project]
+name = "examples"
+# Default model of every agent. An agent's own `model = "..."` overrides it.
+# "auto": the first connected account or API key (Claude, ChatGPT, Gemini, OpenAI), else a local model,
+# else the offline "fake" model.
+model = "auto"
+
+[budget]
+# Maximum spend of one run (USD, API keys only; subscription calls are not billed).
+total = 1.0

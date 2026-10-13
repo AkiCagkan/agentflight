@@ -1,0 +1,44 @@
+<idea-plugin>
+  <id>agentflight</id>
+  <name>AgentFlight</name>
+  <version>0.4.0</version>
+  <vendor>AgentFlight</vendor>
+  <description><![CDATA[
+    Watch, pause, approve and replay LLM agents written with the <b>AgentFlight</b> Python library, inside PyCharm,
+    IntelliJ IDEA and other JetBrains IDEs.
+    <ul>
+      <li><b>AgentFlight</b> tool window: the live agent panel (every agent call, tool call and streamed answer; pause,
+          message or kill an agent; approve steps; replay a run from any step; run history; evals; accounts).</li>
+      <li><b>Run with AgentFlight</b> (editor and project view context menu, Tools menu) runs the current file.</li>
+      <li>"Line" and "Open instructions" in the panel open the file in the editor.</li>
+    </ul>
+    Needs Python with the <code>agentflight</code> package (<code>pip install agentflight</code>).
+  ]]></description>
+  <idea-version since-build="241"/>
+  <depends>com.intellij.modules.platform</depends>
+  <!-- 2025+: JCEF is a bundled plugin; in older IDEs it is part of the platform -->
+  <depends optional="true" config-file="agentflight-jcef.xml">com.intellij.modules.jcef</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow id="AgentFlight" anchor="bottom" icon="/icons/agentflight.svg" factoryClass="agentflight.AgentFlightToolWindowFactory"/>
+    <applicationConfigurable parentId="tools" instance="agentflight.AgentFlightSettings" id="agentflight.settings" displayName="AgentFlight"/>
+    <notificationGroup id="AgentFlight" displayType="BALLOON"/>
+  </extensions>
+
+  <actions>
+    <action id="agentflight.RunFile" class="agentflight.RunWithAgentFlightAction" text="Run with AgentFlight" description="Run this file with AgentFlight and watch its agents"
+            icon="AllIcons.Actions.Execute">
+      <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+      <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+      <add-to-group group-id="ToolsMenu" anchor="first"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt F5"/>
+    </action>
+    <action id="agentflight.EvalFile" class="agentflight.EvalWithAgentFlightAction" text="Run AgentFlight Evals" description="Run the evals in this file">
+      <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="agentflight.RunFile"/>
+      <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="agentflight.RunFile"/>
+    </action>
+    <action id="agentflight.OpenPanel" class="agentflight.OpenPanelAction" text="Open AgentFlight Panel" description="Show the AgentFlight agent panel">
+      <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="agentflight.EvalFile"/>
+    </action>
+  </actions>
+</idea-plugin>

@@ -1,0 +1,5 @@
+A heat pump moves heat from a cold place to a warm place using a small amount of electricity. It works like a refrigerator in reverse: a refrigerant evaporates at low temperature, absorbing heat from outdoor air, the ground or water, and is then compressed so that it condenses at a higher temperature and releases that heat into a building.
+
+The ratio of heat delivered to electricity used is called the coefficient of performance, or COP. Air-source heat pumps typically reach a COP of 3 to 4 in mild weather, meaning they deliver three to four units of heat for each unit of electricity. The COP falls as the temperature difference between the source and the heating system grows, which is why heat pumps work best with low-temperature systems such as underfloor heating.
+
+Ground-source heat pumps use the stable temperature a few meters below the surface and keep a higher COP in winter, but they cost more to install because of the drilling or trenching.

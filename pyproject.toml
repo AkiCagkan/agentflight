@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentflight"
+version = "0.4.0"
+description = "Write LLM agents in plain Python; watch them run, step in, replay any step and test them with evals"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["llm", "agents", "ai", "claude", "chatgpt", "openai", "gemini", "evals", "observability", "debugging"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Debuggers",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+claude = ["anthropic>=1.0"]
+pydantic = ["pydantic>=2"]
+test = ["pydantic>=2", "anthropic>=1.0", "cryptography"]
+dev = ["pydantic>=2", "anthropic>=1.0", "cryptography", "playwright", "ruff"]
+
+[project.scripts]
+agentflight = "agentflight.cli:main"
+
+[tool.setuptools]
+packages = ["agentflight", "agentflight.accounts", "agentflight.panel", "agentflight.providers"]
+
+[tool.setuptools.package-data]
+"agentflight" = ["py.typed"]
+"agentflight.panel" = ["static/*", "static/vendor/**/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["editors", "dist", "build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "BLE"]
+ignore = [
+    "E731",   # lambda assignments are used for small callbacks
+    "B008",   # function calls in defaults (field(...) is the API)
+    "B904",   # `raise ... from` is used where it matters
+    "UP007",  # keep `Optional[...]` where it reads better in user-facing signatures
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011", "BLE001"]

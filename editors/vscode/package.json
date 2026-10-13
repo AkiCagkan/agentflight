@@ -1,0 +1,60 @@
+{
+  "name": "agentflight",
+  "displayName": "AgentFlight",
+  "description": "Watch, pause, approve and replay LLM agents written with the AgentFlight Python library, right inside the editor.",
+  "version": "0.4.0",
+  "publisher": "agentflight",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Debuggers", "Machine Learning", "Testing", "Snippets"],
+  "keywords": ["agents", "llm", "ai", "claude", "chatgpt", "observability", "evals"],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:python",
+    "workspaceContains:**/agentflight.toml",
+    "onView:agentflight.panel"
+  ],
+  "contributes": {
+    "commands": [
+      { "command": "agentflight.openPanel", "title": "Open Panel", "category": "AgentFlight", "icon": "$(pulse)" },
+      { "command": "agentflight.run", "title": "Run File with AgentFlight", "category": "AgentFlight", "icon": "$(play)" },
+      { "command": "agentflight.eval", "title": "Run Evals in File", "category": "AgentFlight", "icon": "$(beaker)" },
+      { "command": "agentflight.connectAccounts", "title": "Connect Accounts (ChatGPT, Claude)", "category": "AgentFlight" },
+      { "command": "agentflight.openPanelInTab", "title": "Open Panel in an Editor Tab", "category": "AgentFlight" },
+      { "command": "agentflight.stopPanel", "title": "Stop the Panel Server", "category": "AgentFlight" }
+    ],
+    "viewsContainers": {
+      "panel": [{ "id": "agentflight", "title": "AgentFlight", "icon": "media/agentflight.svg" }]
+    },
+    "views": {
+      "agentflight": [{ "type": "webview", "id": "agentflight.panel", "name": "Agents" }]
+    },
+    "menus": {
+      "editor/title/run": [
+        { "command": "agentflight.run", "when": "resourceLangId == python", "group": "navigation@1" }
+      ],
+      "editor/context": [
+        { "command": "agentflight.run", "when": "resourceLangId == python", "group": "agentflight@1" },
+        { "command": "agentflight.eval", "when": "resourceLangId == python", "group": "agentflight@2" }
+      ]
+    },
+    "configuration": {
+      "title": "AgentFlight",
+      "properties": {
+        "agentflight.pythonPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Python interpreter that has the `agentflight` package. Empty: the interpreter selected in the Python extension, otherwise `python` on PATH."
+        },
+        "agentflight.panelPort": { "type": "number", "default": 7790, "description": "Port of the panel server (`agentflight watch`)." },
+        "agentflight.codeLens": { "type": "boolean", "default": true, "description": "Show Run / Eval links above agents and evals." },
+        "agentflight.runningLines": { "type": "boolean", "default": true, "description": "Highlight the lines whose agent calls are running." },
+        "agentflight.checkOnSave": { "type": "boolean", "default": true, "description": "Run `agentflight check` when an AgentFlight file is saved and show the problems." }
+      }
+    },
+    "snippets": [
+      { "language": "python", "path": "./snippets/python.json" }
+    ]
+  }
+}

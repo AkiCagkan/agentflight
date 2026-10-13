@@ -1,0 +1,11 @@
+.agentflight/
+__pycache__/
+*.egg-info/
+*.pyc
+.venv/
+venv/
+build/
+dist/
+.ruff_cache/
+docs/screenshots-test/
+.private/
