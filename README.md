@@ -44,6 +44,12 @@ there is an experimental JetBrains plugin.
 1. Install the library (Python 3.11+):
 
    ```bash
+   pip install https://github.com/AkiCagkan/agentflight/releases/download/v0.4.0/agentflight-0.4.0-py3-none-any.whl
+   ```
+
+   or from a clone, which also gives you the `examples/` folder:
+
+   ```bash
    git clone https://github.com/AkiCagkan/agentflight.git && cd agentflight
    pip install -e .
    ```
